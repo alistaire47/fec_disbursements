@@ -1,5 +1,5 @@
 # fec_disbursements
-A page visualizing FEC data on Hillary and Donald's disbursements.  
+[A page](https://alistaire47.github.io/fec_disbursements/) visualizing FEC data on Hillary and Donald's disbursements.  
 
 Built with R, RMarkdown, FlexDashboard, starburstR, and DT (datatables).  
 
