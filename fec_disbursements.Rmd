@@ -1,0 +1,133 @@
+---
+title: "FEC 2016 Presidential Candidate Disbursements"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+    theme: "lumen"
+    logo: "wh_logo_seal.png"
+    favicon: "wh_logo_seal.png"
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(readr)
+library(dplyr)
+library(tidyr)
+library(sunburstR)
+library(DT)
+
+# disbursement data from http://fec.gov/data/CandidateSummary.do?format=html
+hillary <- read_csv('FEC_2016_P00003392_F3P_23_CSV.zip', 
+                    skip = 7,
+                    col_types = cols(`Payment Date` = col_date(format = '%m/%d/%Y'),
+                                     Amount = col_number()))
+donald <- read_csv('Two_Year_Summary_Operating_Expenditures.csv',
+                   skip = 7, trim_ws = TRUE,
+                   col_types = cols(`Payment Date` = col_date(format = '%m/%d/%Y'),
+                                    Amount = col_number()))
+```
+
+
+Disbursements
+===============================================
+
+
+Column
+-----------------------------------------------
+
+### Hillary's Total Disbursements
+
+```{r hillary_box}
+# total
+valueBox(paste0('$', format(sum(hillary$Amount), big.mark = ',')), 
+         icon = 'fa-money', color = 'success')
+```
+
+### Hillary's Disbursement Breakdown
+
+```{r hillary_starburst}
+# starburst
+hillary %>% mutate(Category = gsub('^(\\w+).*', '\\1', Purpose)) %>% 
+  mutate_at(c('Purpose', 'Category', '`Payee Name`'), funs(gsub('-', ' ', .))) %>% 
+  mutate(Categories = paste(Category, 
+                            Purpose, 
+                            `Payee Name`, 
+                            `Report Year`, 
+                            `Report Type`, sep = '-')) %>% 
+  select(Categories, Amount) %>% 
+  sunburst(sizingPolicy = htmlwidgets::sizingPolicy(defaultWidth = '500px'))
+```
+
+
+Column
+-----------------------------------------------
+
+### Donald's Total Disbursements
+
+```{r donald_box}
+# total
+valueBox(paste0('$', format(sum(donald$Amount), big.mark = ',')), 
+         icon = 'fa-money', color = 'success')
+```
+
+
+### Donald's Disbursement Breakdown
+
+```{r donald_starburst}
+# starburst
+donald %>% mutate(Category = gsub('^(\\w+).*', '\\1', Purpose)) %>% 
+  mutate_at(c('Purpose', 'Category', '`Payee Name`'), funs(gsub('-', ' ', .))) %>% 
+  mutate(Categories = paste(Category, 
+                            Purpose, 
+                            `Payee Name`, 
+                            `Report Year`, 
+                            `Report Type`, sep = '-')) %>% 
+  select(Categories, Amount) %>% 
+  sunburst()
+```
+
+The Data
+===============================================
+
+
+Column
+-----------------------------------------------
+
+### Hillary's Data
+
+```{r hillary_data}
+datatable(
+           hillary %>% select(Amount, `Payee Name`, Purpose, `Payment Date`, 
+                              `Report Type`, `Report Year`, City, State) %>% 
+               arrange(desc(Amount)),
+           rownames = FALSE, style = 'bootstrap', 
+           extensions = c('Responsive', 'Scroller'), 
+           options = list(
+               deferRender = TRUE,
+               scrollY = 500,
+               scroller = TRUE
+           )
+) %>% formatCurrency(~Amount) %>% formatDate("Payment Date")
+```
+
+
+Column
+-----------------------------------------------
+
+### Donald's Data
+
+```{r donald_data}
+datatable(
+           donald %>% select(Amount, `Payee Name`, Purpose, `Payment Date`, 
+                             `Report Type`, `Report Year`, City, State) %>%
+               arrange(desc(Amount)),
+           rownames = FALSE, style = 'bootstrap', 
+           extensions = c('Responsive', 'Scroller'), 
+           options = list(
+               deferRender = TRUE,
+               scrollY = 500,
+               scroller = TRUE
+           )
+) %>% formatCurrency(~Amount) %>% formatDate("Payment Date")
+```
